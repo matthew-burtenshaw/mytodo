@@ -100,12 +100,10 @@ export function TodoScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow:1
-  },
   container: {
     flex: 1,
     padding:24,
+    marginTop:24,
     backgroundColor: '#F5F5F5',
   },
   header: {
@@ -134,7 +132,7 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   sortButton: {
-    backgroundColor:'#6200EE',
+    backgroundColor:'#0000FF',
     padding: 12,
     borderRadius: 8,
     marginVertical: 8

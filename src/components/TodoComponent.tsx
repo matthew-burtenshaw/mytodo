@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   todoItem1: {
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderColor: 'red',
+    borderColor: '#FF0000',
     borderWidth: 2,
     borderRadius: 8,
     marginBottom: 16
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   todoItem2: {
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderColor: 'green',
+    borderColor: '#5CA904',
     borderWidth: 2,
     borderRadius: 8,
     marginBottom: 16
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   todoItem3: {
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderColor:'blue',
+    borderColor:'#0000FF',
     borderWidth: 2,
     borderRadius: 8,
     marginBottom: 16

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, ScrollView, TouchableWithoutFeedback, View, Text, TextInput, Keyboard, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {Picker} from '@react-native-picker/picker';
 import { useDatabase } from '@nozbe/watermelondb/react';
@@ -62,65 +62,83 @@ export function TodoModal() {
   });
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>{existingTodo ? 'Edit Todo' : 'Create a new Todo'}</Text>
-      <Text style={styles.label}>Title:</Text>
-      <TextInput
-        value={formik.values.title}
-        placeholder='Title'
-        onChangeText={formik.handleChange('title')}
-        onBlur={formik.handleBlur('title')}
-        style={styles.input}
-      />
-      <Text style={styles.label}>Description:</Text>
-      <TextInput
-        value={formik.values.description}
-        placeholder='Description'
-        onChangeText={formik.handleChange('description')}
-        onBlur={formik.handleBlur('description')}
-        style={styles.input}
-      />
-      <Text style={styles.label}>Priority:</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={formik.values.priority}
-          onValueChange={(option) => {
-            formik.setFieldValue('priority', option);
-          }}
-          style={styles.picker}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.header}>{existingTodo ? 'Edit Todo' : 'Create a new Todo'}</Text>
+        
+        <Text style={styles.label}>Title:</Text>
+        <TextInput
+          value={formik.values.title}
+          placeholder='Title'
+          onChangeText={formik.handleChange('title')}
+          onBlur={formik.handleBlur('title')}
+          style={styles.input}
+        />
+        {formik.touched.title && formik.errors.title && 
+          <Text style={styles.errorText}>{formik.errors.title}</Text>
+        }
+
+        <Text style={styles.label}>Description:</Text>
+        <TextInput
+          value={formik.values.description}
+          placeholder='Description'
+          onChangeText={formik.handleChange('description')}
+          onBlur={formik.handleBlur('description')}
+          style={styles.input}
+        />
+        {formik.touched.description && formik.errors.description &&
+          <Text style={styles.errorText}>{formik.errors.description}</Text>
+        }
+
+        <Text style={styles.label}>Priority:</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formik.values.priority}
+            onValueChange={(option) => {
+              formik.setFieldValue('priority', option);
+            }}
+            style={styles.picker}
+          >
+            <Picker.Item label='1 - High' value={1}/>
+            <Picker.Item label='2 - Medium' value={2}/>
+            <Picker.Item label='3 - Low' value={3}/>
+          </Picker>
+        </View>
+        
+        <TouchableOpacity 
+          disabled={ !formik.dirty || !formik.isValid || formik.isSubmitting} 
+          style={ !formik.dirty || !formik.isValid || formik.isSubmitting ? styles.submitButtonDisabled : styles.submitButton} 
+          onPress={() => formik.handleSubmit()}
         >
-          <Picker.Item label='1 - High' value={1}/>
-          <Picker.Item label='2 - Medium' value={2}/>
-          <Picker.Item label='3 - Low' value={3}/>
-        </Picker>
-      </View>
-      
-      <TouchableOpacity 
-        disabled={ !formik.dirty || !formik.isValid || formik.isSubmitting} 
-        style={ !formik.dirty || !formik.isValid || formik.isSubmitting ? styles.submitButtonDisabled : styles.submitButton} 
-        onPress={() => formik.handleSubmit()}
-      >
-        <Text style={styles.submitButtonText}>
-          { existingTodo ? 
-              ( formik.isSubmitting ? "Updating..." : "Update") : 
-              ( formik.isSubmitting ? "Creating..." : "Create")
-          }
-        </Text>
-      </TouchableOpacity>
-      { submissionError && 
-        <Text style={styles.errorText}>{submissionError}</Text>
-      }
-    </View>
+          <Text style={styles.submitButtonText}>
+            { existingTodo ? 
+                ( formik.isSubmitting ? "Updating..." : "Update") : 
+                ( formik.isSubmitting ? "Creating..." : "Create")
+            }
+          </Text>
+        </TouchableOpacity>
+        { submissionError && 
+          <Text style={styles.errorText}>{submissionError}</Text>
+        }
+      </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding:24,
     backgroundColor: "#F5F5F5",
+  },
+  scrollContainer: {
+    padding:24,
     justifyContent: 'center',
-    gap: 10,
+    gap:10
   },
   header: {
     fontSize: 22,
@@ -139,7 +157,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#DDDDDD",
     padding: 16,
-    marginBottom: 16,
     borderRadius: 8,
     backgroundColor:'#FFFFFF',
     fontSize:16
@@ -157,13 +174,13 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   submitButton: {
-    backgroundColor:'#6200EE',
+    backgroundColor:'#0000FF',
     padding: 12,
     borderRadius: 8,
     marginVertical: 16
   },
   submitButtonDisabled: {
-    backgroundColor:'#6200EE',
+    backgroundColor:'#0000FF',
     opacity: 0.5,
     padding: 12,
     borderRadius: 8,
@@ -175,8 +192,7 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   errorText: {
-    color:'red',
+    color:'#FF0000',
     fontSize:16,
-    marginTop:8
   }
 });
