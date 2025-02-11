@@ -1,11 +1,11 @@
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import TodoList from '../../components/TodoList';
-import Todo from '../../model/Todo';
+import { Picker } from '@react-native-picker/picker';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDatabase } from '@nozbe/watermelondb/react';
 import { Q } from '@nozbe/watermelondb'
-import { useEffect, useState } from 'react';
-import { Picker } from '@react-native-picker/picker';
+import TodoList from '../../components/TodoList';
+import Todo from '../../model/Todo';
 
 enum SortMode {
   None = "none",
@@ -16,16 +16,22 @@ enum SortMode {
 export function TodoScreen() {
   const navigation = useNavigation();
   const database = useDatabase();
+  const [loading, setLoading] = useState<boolean>(false);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterPriority, setFilterPriority] = useState<number>(0);
   const [filterCompleted, setFilterCompleted] = useState<boolean | null>(null);
   const [sortMode, setSortmode] = useState<SortMode>(SortMode.None);
 
-  useEffect(() => {
-    fetchTodos();
-  }, [filterPriority, filterCompleted, sortMode]);
+  // Use the useFocusEffect to do the refresh every time we navigate to the screen
+  // Need to keep the WatermelonDB Observerables working correctly
+  useFocusEffect(
+    useCallback(() => {
+      fetchTodos();
+    }, [filterPriority, filterCompleted, sortMode])
+  );
 
   const fetchTodos = async () => {
+    setLoading(true);
     let conditions = [];
 
     if(filterPriority > 0) {
@@ -45,6 +51,7 @@ export function TodoScreen() {
     }
 
     const subscription = query.observe().subscribe(setTodos);
+    setLoading(false);
     return () => subscription.unsubscribe();
   }
 
@@ -91,10 +98,15 @@ export function TodoScreen() {
       <TouchableOpacity style={styles.sortButton} onPress={cycleSortMode}>
         <Text style={styles.sortButtonText}>
           Sort by Priority:
-          {sortMode === SortMode.None ? " None" : (sortMode === SortMode.Descending ? " High → Low" : " Low → High")}
+          {sortMode === SortMode.None ? " None" : (sortMode === SortMode.Descending ? " Low → High" : " High → Low")}
         </Text>
       </TouchableOpacity>
-      <TodoList todos={todos} />
+
+      { loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : (
+        <TodoList todos={todos} />
+      )}
     </View>
   );
 }
@@ -141,5 +153,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center'
+  },
+  loadingText: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginTop: 24
   }
 });
