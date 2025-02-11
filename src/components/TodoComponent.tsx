@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { withObservables } from '@nozbe/watermelondb/react'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -6,6 +6,7 @@ import Todo from '../model/Todo'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import Animated,  { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 
 type Props = {
   todo: Todo;
@@ -14,38 +15,68 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "TodoModal">
 
 const TodoComponent = ({todo}: Props) => {
   const navigation = useNavigation<NavigationProp>();
+  const translateX = useSharedValue(-200);
+  const opacity = useSharedValue(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    // Animate the Todo item in
+    translateX.value = withTiming(0, { duration: 500 });
+    opacity.value = withTiming(1, { duration: 500 });
+  }, []);
+
+  // Create this function so that it can be ranOnJS
+  const handleDelete = async () => {
+    await todo.deleteTodo();
+  }
 
   const deleteTodo = async() => {
-    await todo.deleteTodo();
+    setIsDeleting(true);
+    translateX.value = withTiming(-200, { duration: 300}, () => {
+      runOnJS(handleDelete)();
+    });
+    //Animate out the Todo
+    opacity.value = withTiming(0, { duration: 200 });
   }
 
   const markAsDone = async() => {
     await todo.toggleCompletion();
   }
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+      opacity: opacity.value
+    }
+  });
+
   return(
-    <TouchableOpacity 
-      onPress={() => navigation.navigate("TodoModal", { todo: todo})} 
-      style={todo.priority === 1 ? styles.todoItem1 : todo.priority === 2 ? styles.todoItem2 : styles.todoItem3}
-    >
-      <View style={styles.row}>
-        <View style={styles.text}>
-          <Text style={todo.completed ? styles.toddoTextDone : styles.todoText}>{todo.title}</Text>
-          <Text style={todo.completed ? styles.toddoTextDone : styles.todoText}>Priority: {todo.priority}</Text>
+    <Animated.View style={[styles.animatedContainer, animatedStyle]}>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate("TodoModal", { todo: todo})} 
+        style={todo.priority === 1 ? styles.todoItem1 : todo.priority === 2 ? styles.todoItem2 : styles.todoItem3}
+        disabled={isDeleting}
+      >
+        <View style={styles.row}>
+          <View style={styles.text}>
+            <Text style={todo.completed ? styles.toddoTextDone : styles.todoText}>{todo.title}</Text>
+            <Text style={todo.completed ? styles.toddoTextDone : styles.todoText}>Priority: {todo.priority}</Text>
+          </View>
+          <View style={styles.iconRow}>
+            <TouchableOpacity style={styles.markAsDone} onPress={markAsDone}>
+              <Icon 
+                name={todo.completed ? "close-circle-outline" : "check-circle-outline"}
+                size={24} 
+                color="grey"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.delete} onPress={deleteTodo}>
+              <Icon name="trash-can-outline" size={24} color="grey" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.iconRow}>
-          <TouchableOpacity style={styles.markAsDone} onPress={markAsDone}>
-            <Icon 
-              name={todo.completed ? "close-circle-outline" : "check-circle-outline"}
-              size={24} 
-              color="grey"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.delete} onPress={deleteTodo}>
-            <Icon name="trash-can-outline" size={24} color="grey" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   )
 };
 
@@ -57,6 +88,9 @@ const EnhancedTodoComponent = enhance(TodoComponent);
 export default EnhancedTodoComponent;
 
 const styles = StyleSheet.create({
+  animatedContainer: {
+    overflow:'hidden'
+  },
   todoItem1: {
     padding: 16,
     backgroundColor: '#FFFFFF',

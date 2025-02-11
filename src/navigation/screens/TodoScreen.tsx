@@ -1,4 +1,4 @@
-import { Button, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import TodoList from '../../components/TodoList';
 import Todo from '../../model/Todo';
@@ -16,7 +16,6 @@ enum SortMode {
 export function TodoScreen() {
   const navigation = useNavigation();
   const database = useDatabase();
-  const [loading, setLoading] = useState<boolean>(true);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterPriority, setFilterPriority] = useState<number>(0);
   const [filterCompleted, setFilterCompleted] = useState<boolean | null>(null);
@@ -27,11 +26,6 @@ export function TodoScreen() {
   }, [filterPriority, filterCompleted, sortMode]);
 
   const fetchTodos = async () => {
-    setLoading(true);
-    console.log('Fetching todos with the following filters:');
-    console.log('FilterPriority: ' + filterPriority);
-    console.log('FilterCompleted: ' + filterCompleted);
-    console.log('SortMode: ' + sortMode);
     let conditions = [];
 
     if(filterPriority > 0) {
@@ -51,7 +45,6 @@ export function TodoScreen() {
     }
 
     const subscription = query.observe().subscribe(setTodos);
-    setLoading(false);
     return () => subscription.unsubscribe();
   }
 
@@ -68,6 +61,11 @@ export function TodoScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Welcome! See below your list of Todos:</Text>
+      <TouchableOpacity style={styles.sortButton} onPress={() => navigation.navigate('TodoModal')}>
+        <Text style={styles.sortButtonText}>
+          + Add Todo
+        </Text>
+      </TouchableOpacity>
       <View style={styles.pickerRow}>
         <View style={styles.pickerContainer}>
           {/* Priority Filter */}
@@ -96,17 +94,15 @@ export function TodoScreen() {
           {sortMode === SortMode.None ? " None" : (sortMode === SortMode.Descending ? " High → Low" : " Low → High")}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.sortButton} onPress={() => navigation.navigate('TodoModal')}>
-        <Text style={styles.sortButtonText}>
-          + Add Todo
-        </Text>
-      </TouchableOpacity>
       <TodoList todos={todos} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow:1
+  },
   container: {
     flex: 1,
     padding:24,

@@ -6,6 +6,7 @@
     "paths": {
       // this allows sub-package imports from src; fx. '@nozbe/watermelondb/decorators'
       "@nozbe/watermelondb/*": ["../../src/*"]
-    }
+    },
+    "experimentalDecorators": true
   }
 }

@@ -10,9 +10,9 @@ type Props = {
 const TodoList = ({todos} : Props) => {
 
   return (
-    <View>
+    <View style={styles.container}>
     {todos.length === 0 &&
-    <View>
+    <View style={styles.emptyContainer}>
       <Text style={styles.text}>There are currently no Todos, create one!</Text>
     </View>
     }
@@ -23,6 +23,8 @@ const TodoList = ({todos} : Props) => {
         renderItem={({ item }) => (
           <TodoComponent todo={item} />
         )}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
       />
     }
     </View>
@@ -33,8 +35,19 @@ const TodoList = ({todos} : Props) => {
 export default TodoList;
 
 const styles = StyleSheet.create({
+  container:{
+    flex: 1
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
   text: {
     fontSize:16,
     color: '#333333'
+  },
+  listContainer: {
+    paddingBottom: 16
   }
 })

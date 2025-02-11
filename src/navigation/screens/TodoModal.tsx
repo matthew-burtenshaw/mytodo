@@ -1,11 +1,10 @@
-import { Text } from '@react-navigation/elements';
-import { Button, StyleSheet, View, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {Picker} from '@react-native-picker/picker';
 import { useDatabase } from '@nozbe/watermelondb/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { createTodo } from '../../model/helper';
 import Todo from '../../model/Todo';
 import { TodoModalNavigationProp, TodoModalRouteProp } from '../types'
 
@@ -13,6 +12,7 @@ export function TodoModal() {
   const navigation = useNavigation<TodoModalNavigationProp>();
   const route = useRoute<TodoModalRouteProp>();
   const database = useDatabase();
+  const [submissionError, setSubmissionError] = useState<string | undefined>(undefined);
 
   const existingTodo: Todo | undefined = route.params?.todo || undefined;
   const formik = useFormik({
@@ -24,35 +24,42 @@ export function TodoModal() {
     validationSchema: Yup.object().shape({
       title: Yup.string().trim().required('Please enter a title'),
       description: Yup.string().trim().required('Please enter a description'),
-      priority: Yup.string().required('Select a priority')
+      priority: Yup.number().required('Select a priority')
     }),
-    onSubmit: createOrEditTodo
-  })
-
-  async function createOrEditTodo(values, form) {
-    form.setSubmitting();
-    try {
-      if(existingTodo) {
-        // If there is an existing one, edit it
-        await existingTodo.updateTodo(values.title, values.description, parseInt(values.priority));
-      } else {
-        // If there is not an existing one, create it
-        await database.write(async () => {
-          await database.get<Todo>("todos").create((todo) => {
-            todo.title = values.title;
-            todo.description = values.description;
-            todo.priority = parseInt(values.priority);
-            todo.completed = false;
-            todo.created = Date.now();
+    onSubmit: async (values, form) => {
+      form.setSubmitting(true);
+      setSubmissionError(undefined);
+      try {
+        if(existingTodo) {
+          // If there is an existing one, edit it
+          await existingTodo.updateTodo(values.title, values.description, values.priority);
+        } else {
+          // If there is not an existing one, create it
+          await database.write(async () => {
+            await database.get<Todo>("todos").create((todo) => {
+              todo.title = values.title;
+              todo.description = values.description;
+              todo.priority = values.priority;
+              todo.completed = false;
+              todo.created = Date.now();
+            });
           });
-        });
+        }
+        // Go back to the List screen
+        navigation.goBack();
+      } catch (error) {
+        if(existingTodo) {
+          setSubmissionError("Error updating the Todo, please try again");
+        } else {
+          setSubmissionError("Error creating the Todo, please try again");
+        }
+        console.log(error);
+      } finally {
+        //reset form status
+        form.setSubmitting(false);
       }
-      
-      navigation.goBack();
-    } catch (error) {
-      console.log(error)
     }
-  }
+  });
 
   return (
     <View style={styles.container}>
@@ -77,8 +84,8 @@ export function TodoModal() {
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={formik.values.priority}
-          onValueChange={option => {
-            formik.handleChange('priority')(option.valueOf().toFixed());
+          onValueChange={(option) => {
+            formik.setFieldValue('priority', option);
           }}
           style={styles.picker}
         >
@@ -88,17 +95,21 @@ export function TodoModal() {
         </Picker>
       </View>
       
-      <View style={styles.buttonContainer}>
-        <Button
-          title={
-            existingTodo ? 
+      <TouchableOpacity 
+        disabled={ !formik.dirty || !formik.isValid || formik.isSubmitting} 
+        style={ !formik.dirty || !formik.isValid || formik.isSubmitting ? styles.submitButtonDisabled : styles.submitButton} 
+        onPress={() => formik.handleSubmit()}
+      >
+        <Text style={styles.submitButtonText}>
+          { existingTodo ? 
               ( formik.isSubmitting ? "Updating..." : "Update") : 
               ( formik.isSubmitting ? "Creating..." : "Create")
           }
-          disabled={!formik.dirty || !formik.isValid || formik.isSubmitting }
-          onPress={formik.handleSubmit}
-        />
-      </View>
+        </Text>
+      </TouchableOpacity>
+      { submissionError && 
+        <Text style={styles.errorText}>{submissionError}</Text>
+      }
     </View>
   );
 }
@@ -145,9 +156,27 @@ const styles = StyleSheet.create({
     height: 55,
     width: "100%"
   },
-  buttonContainer: {
+  submitButton: {
+    backgroundColor:'#6200EE',
+    padding: 12,
     borderRadius: 8,
-    overflow: 'hidden',
-    marginTop:16
+    marginVertical: 16
   },
+  submitButtonDisabled: {
+    backgroundColor:'#6200EE',
+    opacity: 0.5,
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center'
+  },
+  errorText: {
+    color:'red',
+    fontSize:16,
+    marginTop:8
+  }
 });
