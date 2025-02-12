@@ -33,7 +33,6 @@
           "image": "./assets/splash-icon.png"
         }
       ],
-      "react-native-edge-to-edge",
       "expo-sqlite"
     ]
   }
