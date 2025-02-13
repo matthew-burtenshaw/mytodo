@@ -53,7 +53,6 @@ export function TodoModal() {
         } else {
           setSubmissionError("Error creating the Todo, please try again");
         }
-        console.log(error);
       } finally {
         //reset form status
         form.setSubmitting(false);
