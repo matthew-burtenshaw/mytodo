@@ -5,9 +5,10 @@ import TodoComponent from './TodoComponent'
 
 type Props = {
   todos: Todo[];
+  loading: boolean;
 };
 
-const TodoList = ({todos} : Props) => {
+const TodoList = ({todos, loading} : Props) => {
 
   return (
     <View style={styles.container}>
@@ -16,7 +17,12 @@ const TodoList = ({todos} : Props) => {
       <Text style={styles.text}>There are currently no Todos, create one!</Text>
     </View>
     }
-    { todos.length > 0 &&
+    { todos.length > 0 && loading &&
+    <View style={styles.emptyContainer}>
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+    }
+    { todos.length > 0 && !loading &&
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id}
@@ -49,5 +55,10 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 16
+  },
+  loadingText: {
+    textAlign: 'center',
+    color: '#333333',
+    fontSize: 16,
   }
 })

@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useDatabase } from '@nozbe/watermelondb/react';
 import { Q } from '@nozbe/watermelondb'
 import TodoList from '../../components/TodoList';
@@ -22,15 +22,7 @@ export function TodoScreen() {
   const [filterCompleted, setFilterCompleted] = useState<boolean | null>(null);
   const [sortMode, setSortmode] = useState<SortMode>(SortMode.None);
 
-  // Use the useFocusEffect to do the refresh every time we navigate to the screen
-  // Need to keep the WatermelonDB Observerables working correctly
-  useFocusEffect(
-    useCallback(() => {
-      fetchTodos();
-    }, [filterPriority, filterCompleted, sortMode])
-  );
-
-  const fetchTodos = async () => {
+  useEffect(() => {
     setLoading(true);
     let conditions = [];
 
@@ -50,10 +42,12 @@ export function TodoScreen() {
       query = query.extend(Q.sortBy("priority", "desc"));
     }
 
-    const subscription = query.observe().subscribe(setTodos);
-    setLoading(false);
+    const subscription = query.observe().subscribe((newTodos) => {
+      setTodos(newTodos);
+      setLoading(false);
+    });
     return () => subscription.unsubscribe();
-  }
+  }, [filterPriority, filterCompleted, sortMode]);
 
   const cycleSortMode = () => {
     if(sortMode === SortMode.None) {
@@ -101,12 +95,7 @@ export function TodoScreen() {
           {sortMode === SortMode.None ? " None" : (sortMode === SortMode.Descending ? " Low → High" : " High → Low")}
         </Text>
       </TouchableOpacity>
-
-      { loading ? (
-        <Text style={styles.loadingText}>Loading...</Text>
-      ) : (
-        <TodoList todos={todos} />
-      )}
+      <TodoList todos={todos} loading={loading} />
     </View>
   );
 }
@@ -126,11 +115,12 @@ const styles = StyleSheet.create({
     color: '#333333'
   },
   pickerRow: {
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   pickerContainer: {
     flex:1,
-    marginHorizontal: 8
+    marginHorizontal: 8,
+    alignSelf:'flex-end'
   },
   label: {
     fontSize: 16,
@@ -153,10 +143,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center'
-  },
-  loadingText: {
-    textAlign: 'center',
-    fontSize: 16,
-    marginTop: 24
   }
 });
