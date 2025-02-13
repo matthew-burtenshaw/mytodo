@@ -118,6 +118,9 @@ The MyTodo app was built using the following technologies based on the assessmen
 #### **Expo Dev Client for Native Dependencies**
 - Since WatermelonDB **requires native code**, the app **uses Expo Dev Client** instead of Expo Go.
 
+#### **Expo and React Native Versions**
+- As WatermelonDB has issues with more recent versions of React Native, the app has been built on React-Native version 0.74 and Expo version 51.
+
 #### **UI Enhancements**
 - Smooth animations improve the user experience when marking todos as complete or deleting them.
 - The app uses **React Native Reanimated** for performance-friendly animations.
