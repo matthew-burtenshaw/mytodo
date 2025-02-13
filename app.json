@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "mytodo",
     "ios": {
       "supportsTablet": true
@@ -22,8 +22,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      ["@morrowdigital/watermelondb-expo-plugin", { "disableJsi": true }],
       [
-        "@morrowdigital/watermelondb-expo-plugin"
+        "expo-build-properties",
+        {
+          "android": {
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libc++_shared.so"
+              ]
+            }
+          }
+        }
       ],
       "expo-asset",
       [
@@ -34,6 +44,11 @@
         }
       ],
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "feb5c594-4b91-4eff-8bc1-4ea7573ec857"
+      }
+    }
   }
 }
