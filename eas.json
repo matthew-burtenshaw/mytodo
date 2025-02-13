@@ -1,8 +1,7 @@
 {
   "build": {
     "preview": {
-      "distribution": "internal",
-      "developmentClient": true
+      "distribution": "internal"
     },
     "production": {
       "distribution": "store",
